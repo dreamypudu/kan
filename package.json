@@ -56,6 +56,7 @@
       ]
     },
     "overrides": {
+      "next": "15.5.29",
       "@types/minimatch": "npm:minimatch@*",
       "@types/glob": "npm:@types/glob@^8.1.0"
     }
