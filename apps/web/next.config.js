@@ -21,7 +21,8 @@ const config = {
     "**/*": [
       "@esbuild/**",
       "esbuild/**",
-      "typescript/**",
+      // Keep Next.js's internal lib/typescript runtime modules.
+      "**/node_modules/typescript/**",
       "webpack/**",
       "uglify-js/**",
       "terser/**",

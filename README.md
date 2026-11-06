@@ -55,6 +55,76 @@ The easiest way to deploy Kan is through Railway. We've partnered with Railway t
   <img src="https://railway.app/button.svg" alt="Deploy on Railway" height="40" />
 </a>
 
+### Deploy a fork on Railway
+
+Use the repository root (`/`) as the service **Root Directory** and
+`/railway.json` as its **Config File Path**. The checked-in configuration selects
+`apps/web/Dockerfile` instead of Railpack. Keep the full monorepo as the build
+context: setting the root to `apps/web` would exclude the shared packages and
+lockfile.
+
+The official multi-stage Dockerfile installs with the frozen pnpm lockfile,
+builds `@kan/web` and its dependencies with Node 24, and packages the Next.js
+standalone server. The final `web` stage runs as a non-root user. Its default
+command starts `bootstrap.cjs`, which injects runtime public variables, optionally
+runs migrations, and starts the server. Clear any custom build, start, or
+pre-deploy commands previously configured in Railway; the image already handles
+these tasks. In particular, do not use `pnpm start` in the distroless image.
+
+1. Add a Railway **PostgreSQL** service in the same project and environment. Keep
+   its persistent volume and use its private connection URL.
+2. Connect the fork's branch to the Kan web service and configure these variables:
+
+   | Variable | Value |
+   | --- | --- |
+   | `POSTGRES_URL` | `${{Postgres.DATABASE_URL}}` (replace `Postgres` with the actual database service name) |
+   | `BETTER_AUTH_SECRET` | A stable, randomly generated secret of at least 32 characters |
+   | `NEXT_PUBLIC_BASE_URL` | The final public HTTPS URL, without a trailing slash |
+   | `NEXT_PUBLIC_ALLOW_CREDENTIALS` | `true` to enable email/password signup and login, unless using OAuth/OIDC instead |
+   | `RUN_MIGRATIONS` | `true` to apply the checked-in Drizzle migrations before each server start |
+   | `PORT` | `3000` |
+   | `HOSTNAME` | `0.0.0.0` (already the image default; do not override with a hostname) |
+
+3. Generate a public domain in Railway and set its target port to **3000**. Set
+   `NEXT_PUBLIC_BASE_URL` to that domain (or your custom domain), then deploy.
+   `NODE_ENV=production` is already set by the image. Public variables are injected
+   at startup; database credentials and auth secrets do not need build arguments.
+4. Use **one web replica** with startup migrations. The existing bootstrap aborts
+   startup if migrations fail; do not also run a separate migration command.
+   Coordinate migrations separately before scaling to concurrent replicas.
+5. Check deployment logs for successful migrations and server startup. Railway
+   checks `/api/health`, which returns 200 only when a PostgreSQL query succeeds;
+   the configured timeout is 300 seconds. Verify signup, login, board/card creation,
+   and persistence after a redeploy.
+
+Email delivery requires the existing SMTP variables (`SMTP_HOST`, `SMTP_PORT`,
+`SMTP_USER`, `SMTP_PASSWORD`, `EMAIL_FROM`, and `SMTP_SECURE` as appropriate).
+Alternatively, set `NEXT_PUBLIC_DISABLE_EMAIL=true` if email features are not
+needed. Attachments and avatars require S3-compatible storage and the matching
+variables in [.env.example](./.env.example). Redis and OAuth/OIDC remain optional.
+Do not leave `POSTGRES_URL` empty: the local PGlite fallback is not persistent
+storage for a Railway web container. Back up PostgreSQL before deploying schema
+changes.
+
+The Dockerfile uses standard Docker layer caching rather than service-specific
+BuildKit cache mounts so the same file works on Railway and Docker Compose.
+Rebuilds after dependency or source changes may take longer. No application code
+or security checks are disabled by this deployment configuration.
+The TypeScript package exclusion is scoped to `node_modules/typescript` so it
+does not remove Next.js's internal `lib/typescript` modules needed at startup.
+
+To verify the complete image locally on a machine with Docker:
+
+```bash
+docker build --target web -f apps/web/Dockerfile -t kan-railway .
+docker run --rm --env-file .env -e RUN_MIGRATIONS=true -p 3000:3000 kan-railway
+```
+
+For this local check, `.env` must use a PostgreSQL URL reachable from the container.
+Then check `http://localhost:3000/api/health`. See Railway's
+[Dockerfile documentation](https://docs.railway.com/builds/dockerfiles) and
+[configuration reference](https://docs.railway.com/config-as-code/reference).
+
 ### Docker Compose
 
 Alternatively, you can self-host Kan with Docker Compose. This will set up everything for you including your postgres database and automatically run migrations.
