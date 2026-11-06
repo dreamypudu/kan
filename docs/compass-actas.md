@@ -78,7 +78,8 @@ Codex local sigue funcionando con su clave API.
 ### 1. Desplegar el cambio
 
 Subir el commit al repositorio conectado a Railway y esperar un despliegue sano.
-El Dockerfile y bootstrap existentes ejecutan las migraciones antes de iniciar.
+El bootstrap Docker ejecuta las migraciones antes de iniciar **solo si
+`RUN_MIGRATIONS=true` está configurado en el servicio web de Kan**.
 La nueva migración crea `mcp_oauth_grant` y `mcp_oauth_token`; no cambia las tablas
 de tarjetas. En despliegues sin ese bootstrap, ejecutar `pnpm db:migrate` antes
 de iniciar. Las pruebas locales nunca deben migrar producción.
@@ -88,6 +89,7 @@ Mantener las variables existentes en Railway:
 - `NEXT_PUBLIC_BASE_URL=https://tablerocompass.up.railway.app`, sin barra final.
 - `BETTER_AUTH_SECRET`: el secreto privado y estable que ya usa Kan.
 - `POSTGRES_URL`: conexión al PostgreSQL del servicio.
+- `RUN_MIGRATIONS=true`: aplica las migraciones pendientes antes de iniciar Kan.
 - La configuración del método de inicio de sesión que ya utilizas en Kan.
 
 No hay variables OAuth nuevas. HTTPS es obligatorio en producción. No cambiar
@@ -98,6 +100,15 @@ Estas dos direcciones deben devolver JSON después del despliegue:
 https://tablerocompass.up.railway.app/.well-known/oauth-protected-resource/api/mcp
 https://tablerocompass.up.railway.app/.well-known/oauth-authorization-server
 ```
+
+Si `/mcp` devuelve 500 y los logs indican
+`relation "mcp_oauth_grant" does not exist`, falta aplicar la migración OAuth.
+En Railway, abrir **el servicio web de Kan → Variables**, establecer
+`RUN_MIGRATIONS=true` y desplegar los cambios. Comprobar en los logs que la
+migración termina antes de que arranque Next.js. Esta migración añade las dos
+tablas de autorizaciones; no borra tarjetas ni listas.
+Después, iniciar de nuevo la conexión desde ChatGPT: la URL temporal de
+consentimiento anterior caduca a los diez minutos.
 
 ### 2. Añadir la conexión desde ChatGPT web
 

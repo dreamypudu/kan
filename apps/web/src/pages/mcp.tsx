@@ -18,7 +18,8 @@ export async function getServerSideProps(ctx: GetServerSidePropsContext) {
     "~/server/mcp-oauth-provider"
   );
   ctx.res.setHeader("Cache-Control", "no-store");
-  ctx.res.setHeader("Referrer-Policy", "no-referrer");
+  // Keep Origin on same-origin form POSTs without leaking request URLs off-site.
+  ctx.res.setHeader("Referrer-Policy", "same-origin");
   ctx.res.setHeader("X-Frame-Options", "DENY");
   ctx.res.setHeader("Content-Security-Policy", "frame-ancestors 'none'");
   const session = await mcpAuth.api.getSession({

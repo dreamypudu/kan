@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { createServer } from "node:http";
+import type { GetServerSidePropsContext } from "next";
 import type { AddressInfo } from "node:net";
 import { hashPassword } from "better-auth/crypto";
 import { eq } from "drizzle-orm";
@@ -20,6 +21,8 @@ vi.mock("@kan/db/client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@kan/db/client")>()),
   createDrizzleClient: () => state.db,
 }));
+// Next compiles Lingui macros; this test imports only the page's server-side loader.
+vi.mock("@lingui/core/macro", () => ({ t: vi.fn() }));
 
 describe("MCP OAuth HTTP protocol with a real Kan login", () => {
   const clientId = "https://chatgpt.com/oauth/test-http/client.json";
@@ -206,6 +209,32 @@ describe("MCP OAuth HTTP protocol with a real Kan login", () => {
     expect(failure.searchParams.get("error")).toBe("invalid_scope");
   });
 
+  it("serves consent and connections with a referrer policy compatible with browser form POSTs", async () => {
+    const authorization = await nativeFetch(authorizationUrl(), {
+      redirect: "manual",
+      headers: { cookie },
+    });
+    const request = new URL(
+      authorization.headers.get("location")!,
+    ).searchParams.get("request")!;
+    const { getServerSideProps } = await import(
+      "../../../apps/web/src/pages/mcp"
+    );
+    for (const query of [{ request }, {}]) {
+      const setHeader = vi.fn();
+      const result = await getServerSideProps({
+        req: { headers: { cookie } },
+        res: { setHeader },
+        query,
+        resolvedUrl: "/mcp",
+      } as unknown as GetServerSidePropsContext);
+      expect(result).toHaveProperty("props.email", "test@example.com");
+      expect(setHeader).toHaveBeenCalledWith("Referrer-Policy", "same-origin");
+      expect(setHeader).toHaveBeenCalledWith("Cache-Control", "no-store");
+      expect(setHeader).toHaveBeenCalledWith("X-Frame-Options", "DENY");
+    }
+  });
+
   it("requires consent, validates CSRF origin and S256, then rotates and revokes real tokens", async () => {
     const authorization = await nativeFetch(authorizationUrl(), {
       redirect: "manual",
@@ -222,6 +251,12 @@ describe("MCP OAuth HTTP protocol with a real Kan login", () => {
       { cookie, origin: "https://evil.test" },
     );
     expect(csrf.status).toBe(403);
+    const opaqueOrigin = await form(
+      "consent",
+      { request, decision: "approve" },
+      { cookie, origin: "null" },
+    );
+    expect(opaqueOrigin.status).toBe(403);
     const consent = await form(
       "consent",
       { request, decision: "approve" },
