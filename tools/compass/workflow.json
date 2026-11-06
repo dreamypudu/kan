@@ -1,0 +1,9 @@
+{
+  "kanBaseUrl": "https://kan-production-1507.up.railway.app",
+  "boardName": "📋 COMPASS: tareas semanales",
+  "workspacePublicId": null,
+  "boardPublicId": null,
+  "teams": ["Investigación", "Comercial", "Comunicaciones"],
+  "officialTemplatePath": null,
+  "completedListPublicId": null
+}

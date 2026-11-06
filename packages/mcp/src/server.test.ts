@@ -53,6 +53,12 @@ describe("createKanMcpServer over Streamable HTTP", () => {
 
     const { tools } = await mcpClient.listTools();
     expect(tools.map((t) => t.name)).toContain("list_boards");
+    expect(tools.map((t) => t.name)).toContain(
+      "prepare_card_attachment_upload",
+    );
+    expect(tools.map((t) => t.name)).toContain(
+      "confirm_card_attachment_upload",
+    );
 
     const result = await mcpClient.callTool({
       name: "list_boards",

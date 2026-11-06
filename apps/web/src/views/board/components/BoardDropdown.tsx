@@ -18,6 +18,7 @@ import { usePermissions } from "~/hooks/usePermissions";
 import { useModal } from "~/providers/modal";
 import { usePopup } from "~/providers/popup";
 import { api } from "~/utils/api";
+import { getBoardLink } from "~/utils/get-board-link";
 
 export default function BoardDropdown({
   isTemplate,
@@ -114,19 +115,24 @@ export default function BoardDropdown({
     }
   };
 
+  const boardLink = getBoardLink({
+    boardPublicId,
+    isTemplate,
+    visibility,
+    workspaceSlug,
+    boardSlug,
+  });
+
   const handleCopyBoardLink = () =>
     copyLink(
-      isTemplate ? `/templates/${boardPublicId}` : `/boards/${boardPublicId}`,
+      boardLink,
       isTemplate
         ? t`Template URL copied to clipboard`
         : t`Board URL copied to clipboard`,
     );
 
   const handleCopyPublicLink = () =>
-    copyLink(
-      `/${workspaceSlug}/${boardSlug}`,
-      t`Public board URL copied to clipboard`,
-    );
+    copyLink(boardLink, t`Public board URL copied to clipboard`);
 
   const items = [
     {
@@ -139,9 +145,7 @@ export default function BoardDropdown({
           {
             label: t`Copy public link`,
             action: handleCopyPublicLink,
-            icon: (
-              <HiOutlineLink className="h-[16px] w-[16px] text-dark-900" />
-            ),
+            icon: <HiOutlineLink className="h-[16px] w-[16px] text-dark-900" />,
           },
         ]
       : []),

@@ -189,6 +189,9 @@ Optional integrations (email/SMTP, OAuth and OIDC login, S3-compatible file stor
 
 ## MCP Server
 
+For the COMPASS document-to-task workflow operated from Codex, see
+[Documentos de COMPASS a Kan](docs/compass-actas.md).
+
 Kan ships with a [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server that lets any MCP-compatible AI client (Claude Desktop, Codex, Cursor, GitHub Copilot, and others) read and control your Kan instance using natural language.
 
 Run it with `npx`, no clone or global install required:

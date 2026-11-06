@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 import type { KanClient } from "./client.js";
+import { registerAttachmentTools } from "./tools/attachment.js";
 import { registerBoardTools } from "./tools/board.js";
 import { registerCardTools } from "./tools/card.js";
 import { registerChecklistTools } from "./tools/checklist.js";
@@ -22,6 +23,7 @@ export function createKanMcpServer(client: KanClient): McpServer {
   registerChecklistTools(server, client);
   registerLabelTools(server, client);
   registerMemberTools(server, client);
+  registerAttachmentTools(server, client);
 
   return server;
 }
