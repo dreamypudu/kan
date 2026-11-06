@@ -1,5 +1,5 @@
-import { defineConfig } from "vitest/config";
 import { resolve } from "path";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
@@ -10,6 +10,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@kan/db": resolve(__dirname, "../db/src"),
+      "~": resolve(__dirname, "../../apps/web/src"),
     },
   },
 });

@@ -1,10 +1,10 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 import type { KanClient } from "../client.js";
+import type { ToolRegistrar } from "./registrar.js";
 
 export function registerAttachmentTools(
-  server: McpServer,
+  server: ToolRegistrar,
   client: KanClient,
 ): void {
   server.tool(

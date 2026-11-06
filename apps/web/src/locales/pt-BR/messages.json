@@ -8183,5 +8183,113 @@
     "comments": [],
     "origin": [["src/components/YouTubeEmbed/EditYouTubeModal.tsx", 147]],
     "translation": "URL do YouTube"
+  },
+  "Aj5WGS": {
+    "translation": "Permitir que o ChatGPT leia seus dados do Kan e crie, modifique ou exclua cartões e listas com as permissões da sua conta?",
+    "message": "Allow ChatGPT to read your Kan data and create, modify or delete cards and lists using your account permissions?",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/pages/mcp.tsx",
+        38
+      ]
+    ]
+  },
+  "e2PhVh": {
+    "message": "Authorize ChatGPT",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/pages/mcp.tsx",
+        42
+      ]
+    ],
+    "translation": "Autorizar ChatGPT"
+  },
+  "w121rr": {
+    "message": "Back to boards",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/pages/mcp.tsx",
+        54
+      ]
+    ],
+    "translation": "Voltar aos quadros"
+  },
+  "sDlTRG": {
+    "message": "Connect ChatGPT | Kan",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/pages/mcp.tsx",
+        33
+      ]
+    ],
+    "translation": "Conectar ChatGPT | Kan"
+  },
+  "4N5Jt+": {
+    "message": "Connect ChatGPT to Kan",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/pages/mcp.tsx",
+        35
+      ]
+    ],
+    "translation": "Conectar ChatGPT ao Kan"
+  },
+  "zj7WV5": {
+    "message": "Connected applications",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/pages/mcp.tsx",
+        46
+      ]
+    ],
+    "translation": "Aplicativos conectados"
+  },
+  "ru0+2W": {
+    "message": "No active connections",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/pages/mcp.tsx",
+        47
+      ]
+    ],
+    "translation": "Nenhuma conexão ativa"
+  },
+  "B4mMFY": {
+    "message": "Review proposed changes in ChatGPT before approving them. You can revoke access here at any time.",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/pages/mcp.tsx",
+        39
+      ]
+    ],
+    "translation": "Revise as alterações propostas no ChatGPT antes de aprová-las. Você pode revogar o acesso aqui a qualquer momento."
+  },
+  "cg+Poy": {
+    "message": "Revoke access",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/pages/mcp.tsx",
+        51
+      ]
+    ],
+    "translation": "Revogar acesso"
   }
 }

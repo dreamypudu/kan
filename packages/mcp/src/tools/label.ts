@@ -1,7 +1,7 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 import type { KanClient } from "../client.js";
+import type { ToolRegistrar } from "./registrar.js";
 
 // Preset colour palette supported by the Kan UI.
 // Mirrors packages/shared/src/constants/colours.ts. Keep in sync.
@@ -32,7 +32,10 @@ function resolveColourCode(
   return undefined;
 }
 
-export function registerLabelTools(server: McpServer, client: KanClient): void {
+export function registerLabelTools(
+  server: ToolRegistrar,
+  client: KanClient,
+): void {
   server.tool(
     "get_label",
     "Get a label by its public ID",

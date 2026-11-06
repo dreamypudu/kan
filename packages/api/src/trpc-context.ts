@@ -4,6 +4,10 @@ import type { NextApiRequest } from "next";
 import { TRPCError } from "@trpc/server";
 
 import type { dbClient } from "@kan/db/client";
+import {
+  isMcpOAuthOperationAllowed,
+  verifyMcpAccessToken,
+} from "@kan/auth/mcp-oauth";
 import { initAuth } from "@kan/auth/server";
 import { createDrizzleClient } from "@kan/db/client";
 import { createLogger } from "@kan/logger";
@@ -113,6 +117,26 @@ const isRateLimitedApiKeyError = (
 export const createRESTContext = async ({ req }: CreateNextContextOptions) => {
   const headers = new Headers(req.headers as Record<string, string>);
   const auth = createAuthWithHeaders(baseAuth, headers);
+
+  const bearer = headers.get("authorization")?.match(/^Bearer (.+)$/i)?.[1];
+  if (bearer?.startsWith("kan_mcp_")) {
+    const authorization = await verifyMcpAccessToken(db, bearer);
+    if (!authorization) throw new TRPCError({ code: "UNAUTHORIZED" });
+    const path = (req.url ?? "").split("?")[0]?.replace(/^\/api\/v1/, "") ?? "";
+    if (!isMcpOAuthOperationAllowed(req.method ?? "", path)) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "This operation is not available to MCP OAuth clients",
+      });
+    }
+    return createInnerTRPCContext({
+      db,
+      user: { ...authorization.user, name: authorization.user.name ?? "" },
+      auth,
+      headers,
+      transport: "rest",
+    });
+  }
 
   let session;
   try {

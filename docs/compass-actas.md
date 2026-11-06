@@ -34,7 +34,7 @@ compartida en `.agents/skills/compass-actas-kan/SKILL.md`.
    enabled_tools = ["list_workspaces", "get_workspace", "list_boards", "get_board", "get_card", "search_workspace", "get_card_activities", "create_card", "update_card", "add_card_comment", "toggle_card_label", "toggle_card_member", "create_label", "create_list", "prepare_card_attachment_upload", "confirm_card_attachment_upload", "create_checklist", "create_checklist_item", "update_checklist_item"]
 
    [mcp_servers.compass_kan.env]
-   KAN_BASE_URL = "https://kan-production-1507.up.railway.app"
+   KAN_BASE_URL = "https://tablerocompass.up.railway.app"
    ```
 
    La lista habilita las operaciones del flujo y excluye herramientas de eliminación,
@@ -69,54 +69,111 @@ archivo aprobado. Las tareas enlazan la tarjeta documental; sus adjuntos conserv
 el original y la versión estructurada. Una ruta local o URL S3 temporal no cuenta
 como referencia documental permanente. Sin S3, la publicación queda pendiente.
 
-## ChatGPT conectado directamente a Railway (siguiente etapa)
+## Conectar ChatGPT a Railway
 
-La conexión local anterior pertenece a Codex en este computador. Para usar Kan
-desde una conversación normal de ChatGPT sin mantener el PC encendido, el MCP
-debe estar accesible por HTTPS y ofrecer autenticación compatible con ChatGPT.
-El endpoint existente es:
+El MCP remoto admite OAuth con PKCE S256 y la identidad publicada por ChatGPT
+(CIMD). No hay que copiar `KAN_API_TOKEN` ni configurar un secreto de cliente.
+Codex local sigue funcionando con su clave API.
+
+### 1. Desplegar el cambio
+
+Subir el commit al repositorio conectado a Railway y esperar un despliegue sano.
+El Dockerfile y bootstrap existentes ejecutan las migraciones antes de iniciar.
+La nueva migración crea `mcp_oauth_grant` y `mcp_oauth_token`; no cambia las tablas
+de tarjetas. En despliegues sin ese bootstrap, ejecutar `pnpm db:migrate` antes
+de iniciar. Las pruebas locales nunca deben migrar producción.
+
+Mantener las variables existentes en Railway:
+
+- `NEXT_PUBLIC_BASE_URL=https://tablerocompass.up.railway.app`, sin barra final.
+- `BETTER_AUTH_SECRET`: el secreto privado y estable que ya usa Kan.
+- `POSTGRES_URL`: conexión al PostgreSQL del servicio.
+- La configuración del método de inicio de sesión que ya utilizas en Kan.
+
+No hay variables OAuth nuevas. HTTPS es obligatorio en producción. No cambiar
+`BETTER_AUTH_SECRET` para conectar ChatGPT ni desactivar controles de Railway.
+Estas dos direcciones deben devolver JSON después del despliegue:
 
 ```text
-https://kan-production-1507.up.railway.app/api/mcp
+https://tablerocompass.up.railway.app/.well-known/oauth-protected-resource/api/mcp
+https://tablerocompass.up.railway.app/.well-known/oauth-authorization-server
 ```
 
-**Estado: pendiente de implementar y probar.** Actualmente ese endpoint espera una
-API key Bearer. No basta con pegar su URL en ChatGPT y la clave de Windows no se
-transfiere a ChatGPT. No configurar el endpoint sin autenticación.
+### 2. Añadir la conexión desde ChatGPT web
 
-El mínimo desarrollo para conectarlo con OAuth es:
+1. Abrir ChatGPT en un computador y entrar en Configuración → Aplicaciones.
+2. Activar el modo de desarrollador en la configuración avanzada, si la cuenta lo ofrece.
+3. Crear una aplicación/conexión MCP personalizada con nombre **COMPASS**.
+4. URL del servidor: `https://tablerocompass.up.railway.app/api/mcp`.
+5. Elegir autenticación **OAuth** y **CIMD** como identificación del cliente si
+   aparece esa opción. Dejar los campos manuales Client ID y Client Secret vacíos.
+   ChatGPT publica su propio documento de identidad para esta conexión.
+   No elegir DCR: este servidor no publica registro dinámico.
+6. Iniciar sesión en Kan y pulsar **Autorizar ChatGPT** en tu dominio de Kan.
+7. Seleccionar COMPASS en una conversación nueva y pedir:
+   «Consulta mi tablero 📋 COMPASS: tareas semanales y enumera sus listas sin modificar nada».
 
-1. Integrar un proveedor OAuth mantenido con el acceso de Kan, reutilizando Better
-   Auth cuando su implementación satisfaga los requisitos del cliente. La configuración
-   actual no incluye un proveedor de autorización OAuth; el login social existente
-   es un cliente OAuth, no ese proveedor. Si se requieren tablas nuevas, crearlas
-   mediante migraciones aditivas sin cambiar las tablas de tarjetas.
-2. Publicar los metadatos del recurso MCP y del servidor de autorización. Implementar
-   authorization code con PKCE S256 y registro de cliente predefinido, CIMD o DCR.
-   Configurar el callback exacto que muestre ChatGPT al crear la conexión; no inventarlo.
-3. Añadir consentimiento, expiración/revocación y scopes de lectura/escritura. Verificar
-   emisor, audiencia, expiración y scopes en cada petición, y ejecutar las operaciones
-   con la identidad y los permisos de tablero del usuario autorizado. No usar una
-   API key global compartida como sustituto de la autorización de cada usuario.
-4. Exponer solo las herramientas necesarias para tareas/checklists/consulta y
-   preparar el flujo de propuesta/aprobación para ChatGPT. Las habilidades locales
-   y el helper de subida de este repositorio no se instalan automáticamente allí.
-   La conservación de originales requiere adaptar la subida de archivos al entorno
-   de ChatGPT; no prometerla basándose solo en extraer texto del documento.
-5. Tras probar autenticación y permisos, desplegar y crear la integración personalizada
-   desde ChatGPT web: nombre COMPASS, URL anterior y OAuth. Completar el login,
-   instalar/seleccionar la integración y probar primero lectura y una tarjeta de prueba.
-   La disponibilidad exacta de esta opción depende de la cuenta y de sus políticas.
+Los nombres de los menús y la disponibilidad dependen de la cuenta. Si no aparece
+crear una conexión MCP o usar CIMD, revisar las opciones admitidas por esa cuenta.
+Una API key no sustituye este flujo OAuth.
 
-Referencias oficiales:
-[conectar un MCP personalizado](https://developers.openai.com/api/docs/guides/custom-mcp-server)
-y [autenticación de integraciones MCP](https://developers.openai.com/plugins/build/auth).
+El callback debe coincidir exactamente con el documento oficial HTTPS publicado
+por ChatGPT. No hay que registrar callbacks manualmente en Railway ni en Trello.
+El servidor valida PKCE, emisor, recurso, scopes y expiración; usa tokens opacos
+ligados a una autorización almacenada, no JWT aportados por el cliente.
+Solo consulta documentos CIMD de `https://chatgpt.com/oauth/.../client.json`, sin
+redirecciones ni descargas desde hosts arbitrarios. Admite el documento estable
+y el documento específico de la conexión. Anuncia RFC 9207 y añade `iss` también
+a los errores devueltos al callback. El recurso es el endpoint MCP y el scope
+es `kan:mcp`.
+
+### 3. Procesar documentos y gestionar tarjetas/listas
+
+Adjuntar el documento y la plantilla oficial en la conversación y pedir:
+
+> Usa COMPASS. Consulta primero el tablero 📋 COMPASS: tareas semanales. Extrae
+> compromisos de este documento, distingue Investigación, Comercial y
+> Comunicaciones y presenta los cambios propuestos sin ejecutarlos. No inventes
+> responsables ni plazos. Espera mi aprobación y usa checklists reales.
+
+La conexión permite crear, modificar y borrar tarjetas y listas; también consultar
+workspaces/tableros, crear tableros y etiquetas, añadir comentarios y gestionar
+checklists. Kan comprueba los permisos del usuario y el acceso a cada tablero.
+No expone borrado de workspaces/tableros, invitaciones ni cambios de permisos.
+La misma restricción se aplica al uso directo de la API REST con estos tokens.
+El borrado conserva el comportamiento original de Kan: borrar una lista también
+afecta a las tarjetas que contiene. Revisar ese alcance antes de aprobarlo.
+
+**Límites de esta versión:** aprobar cada propuesta, incluidos los borrados, es
+parte del flujo de conversación en ChatGPT; Kan no añade una cola transaccional
+de propuestas. El consentimiento OAuth autoriza las operaciones indicadas en los
+espacios a los que el usuario ya tiene acceso. El servidor no recibe ni interpreta
+los documentos directamente: ChatGPT debe poder leer su contenido.
+Las habilidades y archivos locales de Codex no se transfieren a ChatGPT.
+La conservación del original y la versión estructurada en S3 continúa disponible
+en el flujo de Codex, pero **no está implementada en esta conexión de ChatGPT**.
+No afirmar que se guardaron archivos si solo se crearon tarjetas.
+
+### Revocar y reconectar
+
+Abrir `https://tablerocompass.up.railway.app/mcp` con la sesión de Kan y
+pulsar **Revocar acceso**. Solo se pueden revocar conexiones propias.
+Los códigos caducan al minuto y se usan una sola vez. Los access tokens caducan
+a la hora; los refresh tokens rotan y caducan a los 30 días desde la autorización
+inicial. Reutilizar un código o refresh token consumido revoca toda su autorización.
+Las credenciales se guardan como hashes. Tras revocar o caducar el acceso,
+volver a conectar la aplicación en ChatGPT.
+
+Referencias: [autenticación MCP de OpenAI](https://developers.openai.com/plugins/build/auth)
+y [servidor OAuth del SDK MCP](https://github.com/modelcontextprotocol/typescript-sdk/tree/main/src/server/auth).
 
 ## Comprobaciones locales
 
 ```powershell
 pnpm --filter '@kan.bn/mcp' test
 pnpm --filter '@kan.bn/mcp' typecheck
+pnpm --filter '@kan/api' test -- integration-tests/mcp-oauth.integration.test.ts integration-tests/mcp-oauth-http.integration.test.ts
+pnpm --filter '@kan/web' test -- src/__tests__/mcp.test.ts
 node --test tools/compass/upload-file.test.mjs
 ```
 

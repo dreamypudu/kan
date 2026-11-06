@@ -77,6 +77,14 @@ const config = {
   async rewrites() {
     return [
       {
+        source: "/.well-known/oauth-authorization-server",
+        destination: "/api/mcp/oauth/metadata",
+      },
+      {
+        source: "/.well-known/oauth-protected-resource/:path*",
+        destination: "/api/mcp/oauth/resource",
+      },
+      {
         source: "/settings",
         destination: "/settings/account",
       },

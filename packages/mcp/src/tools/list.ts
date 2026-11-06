@@ -1,9 +1,12 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 import type { KanClient } from "../client.js";
+import type { ToolRegistrar } from "./registrar.js";
 
-export function registerListTools(server: McpServer, client: KanClient): void {
+export function registerListTools(
+  server: ToolRegistrar,
+  client: KanClient,
+): void {
   server.tool(
     "create_list",
     "Create a new list inside a board",

@@ -1,10 +1,13 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 import type { KanClient } from "../client.js";
+import type { ToolRegistrar } from "./registrar.js";
 import { findWorkspaceByName } from "./shared.js";
 
-export function registerBoardTools(server: McpServer, client: KanClient): void {
+export function registerBoardTools(
+  server: ToolRegistrar,
+  client: KanClient,
+): void {
   server.tool(
     "list_boards",
     "List all boards in a workspace. Requires the workspace publicId — use find_workspace_by_name first if you only know the workspace name.",

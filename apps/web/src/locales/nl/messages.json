@@ -8183,5 +8183,113 @@
     "comments": [],
     "origin": [["src/components/YouTubeEmbed/EditYouTubeModal.tsx", 147]],
     "translation": "YouTube-URL"
+  },
+  "Aj5WGS": {
+    "translation": "ChatGPT toestaan je Kan-gegevens te lezen en kaarten en lijsten te maken, wijzigen of verwijderen met de rechten van je account?",
+    "message": "Allow ChatGPT to read your Kan data and create, modify or delete cards and lists using your account permissions?",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/pages/mcp.tsx",
+        38
+      ]
+    ]
+  },
+  "e2PhVh": {
+    "message": "Authorize ChatGPT",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/pages/mcp.tsx",
+        42
+      ]
+    ],
+    "translation": "ChatGPT autoriseren"
+  },
+  "w121rr": {
+    "message": "Back to boards",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/pages/mcp.tsx",
+        54
+      ]
+    ],
+    "translation": "Terug naar borden"
+  },
+  "sDlTRG": {
+    "message": "Connect ChatGPT | Kan",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/pages/mcp.tsx",
+        33
+      ]
+    ],
+    "translation": "ChatGPT verbinden | Kan"
+  },
+  "4N5Jt+": {
+    "message": "Connect ChatGPT to Kan",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/pages/mcp.tsx",
+        35
+      ]
+    ],
+    "translation": "ChatGPT verbinden met Kan"
+  },
+  "zj7WV5": {
+    "message": "Connected applications",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/pages/mcp.tsx",
+        46
+      ]
+    ],
+    "translation": "Verbonden applicaties"
+  },
+  "ru0+2W": {
+    "message": "No active connections",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/pages/mcp.tsx",
+        47
+      ]
+    ],
+    "translation": "Geen actieve verbindingen"
+  },
+  "B4mMFY": {
+    "message": "Review proposed changes in ChatGPT before approving them. You can revoke access here at any time.",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/pages/mcp.tsx",
+        39
+      ]
+    ],
+    "translation": "Bekijk de voorgestelde wijzigingen in ChatGPT voordat je ze goedkeurt. Je kunt de toegang hier op elk moment intrekken."
+  },
+  "cg+Poy": {
+    "message": "Revoke access",
+    "placeholders": {},
+    "comments": [],
+    "origin": [
+      [
+        "src/pages/mcp.tsx",
+        51
+      ]
+    ],
+    "translation": "Toegang intrekken"
   }
 }

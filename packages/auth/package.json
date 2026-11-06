@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "exports": {
+    "./mcp-oauth": "./src/mcp-oauth.ts",
     ".": "./src/index.ts",
     "./client": {
       "types": "./src/client.ts",

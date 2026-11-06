@@ -204,6 +204,8 @@ Configure it with two environment variables: `KAN_BASE_URL` (your Kan instance) 
 
 See the [MCP Server docs](https://docs.kan.bn/integrations/mcp-server) for per-client config (Claude Desktop, Codex, and others), example prompts, the full tool reference, and troubleshooting.
 
+Self-hosted ChatGPT connections can use OAuth with PKCE and ChatGPT's official client metadata (CIMD) at `/api/mcp`. Users sign in with their own Kan account, approve access, and can revoke it at `/mcp`. See [Railway deployment and ChatGPT setup](docs/compass-actas.md#conectar-chatgpt-a-railway), including supported operations and document-upload limitations.
+
 ## Contributing
 
 We welcome contributions! Please read our [contribution guidelines](CONTRIBUTING.md) before submitting a pull request.

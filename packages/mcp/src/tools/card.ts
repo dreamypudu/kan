@@ -1,9 +1,12 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 import type { KanClient } from "../client.js";
+import type { ToolRegistrar } from "./registrar.js";
 
-export function registerCardTools(server: McpServer, client: KanClient): void {
+export function registerCardTools(
+  server: ToolRegistrar,
+  client: KanClient,
+): void {
   server.tool(
     "create_card",
     "Create a new card in a list",
@@ -40,7 +43,7 @@ export function registerCardTools(server: McpServer, client: KanClient): void {
       const data = await client.request("POST", "/cards", {
         listPublicId,
         title,
-        description,
+        description: description ?? "",
         dueDate,
         labelPublicIds: labelPublicIds ?? [],
         memberPublicIds: memberPublicIds ?? [],
@@ -265,9 +268,7 @@ export function registerCardTools(server: McpServer, client: KanClient): void {
     "Add or remove a member assignment on a card (toggles if already assigned)",
     {
       cardPublicId: z.string().describe("The card's public ID"),
-      memberPublicId: z
-        .string()
-        .describe("The workspace member's public ID"),
+      memberPublicId: z.string().describe("The workspace member's public ID"),
     },
     async ({ cardPublicId, memberPublicId }) => {
       const data = await client.request(

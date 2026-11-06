@@ -2,6 +2,7 @@ import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -73,5 +74,43 @@ describe("createKanMcpServer over Streamable HTTP", () => {
     expect(content?.text).toContain("Roadmap");
 
     await mcpClient.close();
+  });
+});
+
+describe("restricted remote tool registration", () => {
+  it("advertises only permitted tools and rejects an unregistered destructive operation", async () => {
+    const request = vi.fn().mockResolvedValue({ publicId: "card12345678" });
+    const server = createKanMcpServer(
+      { request },
+      {
+        allowedTools: new Set(["get_card", "create_checklist_item"]),
+        instructions: "Ask for approval before changes",
+      },
+    );
+    const client = new Client({ name: "test", version: "1" });
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+    await server.connect(serverTransport);
+    await client.connect(clientTransport);
+    const tools = (await client.listTools()).tools;
+    expect(tools.map((tool) => tool.name).sort()).toEqual([
+      "create_checklist_item",
+      "get_card",
+    ]);
+    expect(
+      tools.find((tool) => tool.name === "get_card")?.annotations?.readOnlyHint,
+    ).toBe(true);
+    expect(
+      tools.find((tool) => tool.name === "create_checklist_item")?.annotations
+        ?.readOnlyHint,
+    ).toBe(false);
+    const result = await client.callTool({
+      name: "delete_card",
+      arguments: { cardPublicId: "card12345678" },
+    });
+    expect(result.isError).toBe(true);
+    expect(request).not.toHaveBeenCalled();
+    await client.close();
+    await server.close();
   });
 });

@@ -4,6 +4,26 @@ import { describe, expect, it, vi } from "vitest";
 import type { KanClient } from "../client.js";
 import { registerCardTools } from "./card.js";
 
+it("creates a card without a description using the API's required empty string", async () => {
+  const tools = new Map<string, (...args: unknown[]) => unknown>();
+  const server = {
+    tool: (name: string, ...args: unknown[]) => {
+      tools.set(name, args.at(-1) as (...args: unknown[]) => unknown);
+    },
+  } as unknown as McpServer;
+  const request = vi.fn().mockResolvedValue({ publicId: "card12345678" });
+  registerCardTools(server, { request });
+  await tools.get("create_card")?.({
+    listPublicId: "list12345678",
+    title: "New task",
+  });
+  expect(request).toHaveBeenCalledWith(
+    "POST",
+    "/cards",
+    expect.objectContaining({ description: "", position: "end" }),
+  );
+});
+
 describe("duplicate_card", () => {
   it("sends the backend's expected `listPublicId` field when a target list is given", async () => {
     const tools = new Map<string, (...args: unknown[]) => unknown>();

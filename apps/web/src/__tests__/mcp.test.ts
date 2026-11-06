@@ -4,6 +4,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("next-runtime-env", () => ({
   env: vi.fn(),
 }));
+vi.mock("@kan/db/client", () => ({ createDrizzleClient: vi.fn(() => ({})) }));
+vi.mock("@kan/auth/mcp-oauth", () => ({
+  MCP_SCOPE: "kan:mcp",
+  getMcpOAuthUrls: () => ({ base: "https://kan.bn" }),
+  verifyMcpAccessToken: vi.fn(),
+}));
 
 vi.mock("@kan/api/trpc-context", () => ({
   createNextApiContext: vi
@@ -57,13 +63,14 @@ function makeReqRes(headers: Record<string, string> = {}) {
     headers: { authorization: "Bearer kan_test_token", ...headers },
   } as unknown as NextApiRequest;
   const statusSpy = vi.fn().mockReturnThis();
+  const setHeaderSpy = vi.fn();
   const res = {
-    setHeader: vi.fn(),
+    setHeader: setHeaderSpy,
     status: statusSpy,
     json: vi.fn(),
     on: vi.fn(),
   } as unknown as NextApiResponse;
-  return { req, res, statusSpy };
+  return { req, res, statusSpy, setHeaderSpy };
 }
 
 describe("POST /api/mcp", () => {
@@ -78,6 +85,41 @@ describe("POST /api/mcp", () => {
       return undefined;
     });
     clearPaidWorkspaceCache();
+  });
+
+  it("rejects an expired OAuth token before connecting a tool server", async () => {
+    const { verifyMcpAccessToken } = await import("@kan/auth/mcp-oauth");
+    vi.mocked(verifyMcpAccessToken).mockResolvedValue(null);
+    const { req, res, statusSpy, setHeaderSpy } = makeReqRes({
+      authorization: "Bearer kan_mcp_access_expired",
+    });
+    await handler(req, res);
+    expect(statusSpy).toHaveBeenCalledWith(401);
+    expect(setHeaderSpy).toHaveBeenCalledWith(
+      "WWW-Authenticate",
+      expect.stringContaining("resource_metadata="),
+    );
+    expect(connect).not.toHaveBeenCalled();
+  });
+
+  it("serves the restricted tool set for an authorized OAuth user", async () => {
+    const { verifyMcpAccessToken } = await import("@kan/auth/mcp-oauth");
+    const { createKanMcpServer } = await import("@kan.bn/mcp");
+    vi.mocked(verifyMcpAccessToken).mockResolvedValue({
+      user: { id: "test" },
+    } as never);
+    const { req, res } = makeReqRes({
+      authorization: "Bearer kan_mcp_access_valid",
+    });
+    await handler(req, res);
+    const options = vi.mocked(createKanMcpServer).mock.calls.at(-1)?.[1];
+    expect(options?.allowedTools?.has("create_checklist_item")).toBe(true);
+    expect(options?.allowedTools?.has("delete_card")).toBe(true);
+    expect(options?.allowedTools?.has("delete_list")).toBe(true);
+    expect(options?.allowedTools?.has("update_list")).toBe(true);
+    expect(options?.allowedTools?.has("delete_workspace")).toBe(false);
+    expect(options?.allowedTools?.has("invite_member")).toBe(false);
+    expect(connect).toHaveBeenCalled();
   });
 
   it("rejects a free-plan-only workspace on Kan Cloud with 403", async () => {

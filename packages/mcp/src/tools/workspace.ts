@@ -1,11 +1,11 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 import type { KanClient } from "../client.js";
+import type { ToolRegistrar } from "./registrar.js";
 import { findWorkspaceByName } from "./shared.js";
 
 export function registerWorkspaceTools(
-  server: McpServer,
+  server: ToolRegistrar,
   client: KanClient,
 ): void {
   server.tool(
