@@ -462,6 +462,7 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
 
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [activeWidth, setActiveWidth] = useState<number | null>(null);
+  const [isTouchDrag, setIsTouchDrag] = useState(false);
   const [dragCardsByList, setDragCardsByList] = useState<Record<
     string,
     BoardCard[]
@@ -510,7 +511,12 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
     [scrollRef],
   );
 
-  const handleDragStart = ({ active }: DragStartEvent): void => {
+  const handleDragStart = ({
+    active,
+    activatorEvent,
+  }: DragStartEvent): void => {
+    lastOverIdRef.current = null;
+    setIsTouchDrag(activatorEvent.type === "touchstart");
     setActiveId(active.id);
     setActiveWidth(active.rect.current.initial?.width ?? null);
     if (getEventData(active)?.type === "CARD") {
@@ -583,6 +589,7 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
   const handleDragEnd = ({ active, over }: DragEndEvent): void => {
     setActiveId(null);
     setActiveWidth(null);
+    setIsTouchDrag(false);
     const activeData = getEventData(active);
     const activeIdStr = String(active.id);
 
@@ -962,6 +969,8 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
           <div
             ref={scrollRef}
             onMouseDown={onMouseDown}
+            // Snap-to-list fights the small scrollBy steps used during dragging.
+            style={{ scrollSnapType: activeId !== null ? "none" : undefined }}
             className={`scrollbar-w-none scrollbar-track-rounded-[4px] scrollbar-thumb-rounded-[4px] scrollbar-h-[8px] z-0 flex-1 snap-x snap-mandatory scroll-pl-[10px] overflow-y-hidden overflow-x-scroll overscroll-contain scrollbar scrollbar-track-light-200 scrollbar-thumb-light-400 dark:scrollbar-track-dark-100 dark:scrollbar-thumb-dark-300 md:snap-none`}
           >
             {isLoading ? (
@@ -1007,10 +1016,27 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
                   <DndContext
                     sensors={sensors}
                     collisionDetection={collisionDetectionStrategy}
-                    autoScroll={{ canScroll }}
+                    autoScroll={{
+                      canScroll,
+                      ...(isTouchDrag
+                        ? {
+                            acceleration: 4,
+                            interval: 16,
+                            threshold: { x: 0.1, y: 0.2 },
+                          }
+                        : {}),
+                    }}
                     onDragStart={handleDragStart}
                     onDragOver={handleDragOver}
                     onDragEnd={handleDragEnd}
+                    onDragCancel={() => {
+                      setActiveId(null);
+                      setActiveWidth(null);
+                      setIsTouchDrag(false);
+                      setDragCardsByList(null);
+                      setDragListOrder(null);
+                      lastOverIdRef.current = null;
+                    }}
                   >
                     <SortableContext
                       items={listIds}
