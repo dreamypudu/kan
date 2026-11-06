@@ -7,19 +7,11 @@ import type {
 } from "@dnd-kit/core";
 import { useParams } from "next/navigation";
 import { useRouter } from "next/router";
-import {
-  DndContext,
-  DragOverlay,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
+import { DndContext, DragOverlay } from "@dnd-kit/core";
 import {
   arrayMove,
   horizontalListSortingStrategy,
   SortableContext,
-  sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import { t } from "@lingui/core/macro";
 import { keepPreviousData } from "@tanstack/react-query";
@@ -79,6 +71,7 @@ import { UpdateBoardSlugForm } from "./components/UpdateBoardSlugForm";
 import ViewToggle from "./components/ViewToggle";
 import VisibilityButton from "./components/VisibilityButton";
 import { createBoardCollisionDetection } from "./dnd/collision";
+import { useBoardSensors } from "./dnd/use-board-sensors";
 
 type PublicListId = string;
 
@@ -508,12 +501,7 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
     [],
   );
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  );
+  const sensors = useBoardSensors();
 
   const canScroll = useCallback(
     (element: Element) =>

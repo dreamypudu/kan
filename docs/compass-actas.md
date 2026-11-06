@@ -31,7 +31,7 @@ compartida en `.agents/skills/compass-actas-kan/SKILL.md`.
    args = ["packages/mcp/dist/index.js"]
    cwd = "C:/ruta/al/repositorio/kan"
    env_vars = ["KAN_API_TOKEN"]
-   enabled_tools = ["list_workspaces", "get_workspace", "list_boards", "get_board", "get_card", "search_workspace", "get_card_activities", "create_card", "update_card", "add_card_comment", "toggle_card_label", "toggle_card_member", "create_label", "create_list", "prepare_card_attachment_upload", "confirm_card_attachment_upload"]
+   enabled_tools = ["list_workspaces", "get_workspace", "list_boards", "get_board", "get_card", "search_workspace", "get_card_activities", "create_card", "update_card", "add_card_comment", "toggle_card_label", "toggle_card_member", "create_label", "create_list", "prepare_card_attachment_upload", "confirm_card_attachment_upload", "create_checklist", "create_checklist_item", "update_checklist_item"]
 
    [mcp_servers.compass_kan.env]
    KAN_BASE_URL = "https://kan-production-1507.up.railway.app"
@@ -69,7 +69,50 @@ archivo aprobado. Las tareas enlazan la tarjeta documental; sus adjuntos conserv
 el original y la versión estructurada. Una ruta local o URL S3 temporal no cuenta
 como referencia documental permanente. Sin S3, la publicación queda pendiente.
 
-## Comprobaciones
+## ChatGPT conectado directamente a Railway (siguiente etapa)
+
+La conexión local anterior pertenece a Codex en este computador. Para usar Kan
+desde una conversación normal de ChatGPT sin mantener el PC encendido, el MCP
+debe estar accesible por HTTPS y ofrecer autenticación compatible con ChatGPT.
+El endpoint existente es:
+
+```text
+https://kan-production-1507.up.railway.app/api/mcp
+```
+
+**Estado: pendiente de implementar y probar.** Actualmente ese endpoint espera una
+API key Bearer. No basta con pegar su URL en ChatGPT y la clave de Windows no se
+transfiere a ChatGPT. No configurar el endpoint sin autenticación.
+
+El mínimo desarrollo para conectarlo con OAuth es:
+
+1. Integrar un proveedor OAuth mantenido con el acceso de Kan, reutilizando Better
+   Auth cuando su implementación satisfaga los requisitos del cliente. La configuración
+   actual no incluye un proveedor de autorización OAuth; el login social existente
+   es un cliente OAuth, no ese proveedor. Si se requieren tablas nuevas, crearlas
+   mediante migraciones aditivas sin cambiar las tablas de tarjetas.
+2. Publicar los metadatos del recurso MCP y del servidor de autorización. Implementar
+   authorization code con PKCE S256 y registro de cliente predefinido, CIMD o DCR.
+   Configurar el callback exacto que muestre ChatGPT al crear la conexión; no inventarlo.
+3. Añadir consentimiento, expiración/revocación y scopes de lectura/escritura. Verificar
+   emisor, audiencia, expiración y scopes en cada petición, y ejecutar las operaciones
+   con la identidad y los permisos de tablero del usuario autorizado. No usar una
+   API key global compartida como sustituto de la autorización de cada usuario.
+4. Exponer solo las herramientas necesarias para tareas/checklists/consulta y
+   preparar el flujo de propuesta/aprobación para ChatGPT. Las habilidades locales
+   y el helper de subida de este repositorio no se instalan automáticamente allí.
+   La conservación de originales requiere adaptar la subida de archivos al entorno
+   de ChatGPT; no prometerla basándose solo en extraer texto del documento.
+5. Tras probar autenticación y permisos, desplegar y crear la integración personalizada
+   desde ChatGPT web: nombre COMPASS, URL anterior y OAuth. Completar el login,
+   instalar/seleccionar la integración y probar primero lectura y una tarjeta de prueba.
+   La disponibilidad exacta de esta opción depende de la cuenta y de sus políticas.
+
+Referencias oficiales:
+[conectar un MCP personalizado](https://developers.openai.com/api/docs/guides/custom-mcp-server)
+y [autenticación de integraciones MCP](https://developers.openai.com/plugins/build/auth).
+
+## Comprobaciones locales
 
 ```powershell
 pnpm --filter '@kan.bn/mcp' test

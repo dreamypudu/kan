@@ -57,7 +57,7 @@ export default function SortableCard({
         onContextMenu(e, card.publicId);
       }}
       href={cardHref}
-      className={`mb-2 flex flex-col ${
+      className={`mb-2 flex touch-manipulation select-none flex-col [-webkit-touch-callout:none] ${
         isPlaceholder ? "pointer-events-none" : ""
       } ${
         canEditCard && !isPlaceholder && isDragging

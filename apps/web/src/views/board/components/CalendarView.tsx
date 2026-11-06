@@ -4,7 +4,8 @@ import Link from "next/link";
 import {
   DndContext,
   DragOverlay,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useDraggable,
   useDroppable,
   useSensor,
@@ -70,6 +71,7 @@ function DraggableCalendarCard({
 
   return (
     <li
+      className="touch-manipulation select-none [-webkit-touch-callout:none]"
       ref={setNodeRef}
       style={{
         transform: CSS.Translate.toString(transform),
@@ -254,7 +256,10 @@ const CalendarView = ({
   }, [activeId]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 250, tolerance: 8 },
+    }),
   );
 
   const activeCard = useMemo(

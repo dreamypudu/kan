@@ -93,6 +93,11 @@ en `finally`. Un solo operador por tablero: el bloqueo local no coordina otros e
   documental. No borrar o editar comentarios anteriores para compactar el historial.
   Registrar una operación independiente para ese comentario: una mutación aplicada
   y un comentario fallido deben poder recuperarse por separado.
+- Cuando se solicite un checklist, usar `create_checklist` y
+  `create_checklist_item`: los símbolos de casillas en la descripción no son
+  interactivos ni cuentan para el progreso. Reconsultar los checklists e ítems
+  antes de crearlos para evitar duplicados. Usar `update_checklist_item` para
+  cambios de estado solo con confirmación explícita del avance.
 - No usar herramientas de eliminación ni cambiar permisos. No completar tareas
   por inferencia, por vencimiento del plazo o por ausencia en el acta siguiente.
 
